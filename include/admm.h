@@ -13,6 +13,9 @@
 
 #include "args.h"
 #include "str_util.h"
+
+#define EPSILON 1e-6
+
 namespace alg
 {
 using namespace std;
@@ -22,7 +25,7 @@ class ADMM{
 		ADMM(struct args_t a_);
 		~ADMM();
 		
-		bool x_update(ifstream &);
+		bool x_update(ifstream &,double *);
 		void y_update();
 		void z_update();
 		void train();
@@ -34,6 +37,10 @@ class ADMM{
 		double innerProduct(vector<uint32_t>);
 		double sigmoid(double);
 		void get_Grad(vector<uint32_t>,int);
+		logloss(double p,double y);
+		
+	public:
+		compute
 	private:
 		struct args_t a;
 		
