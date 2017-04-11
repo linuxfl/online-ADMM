@@ -102,7 +102,7 @@ void ADMM::train()
 		/* Termination checks */
 		if(isStop())
 			break;
-		progressiveLoss += loss
+		progressiveLoss += loss;
 		printf("%10.4f\n",progressiveLoss);
 		k++;
 	}
