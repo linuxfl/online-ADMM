@@ -73,6 +73,8 @@ ADMM::~ADMM()
 void ADMM::train()
 {
 	int k = 0;
+	double progressiveLoss = 0;
+	double loss;
 	
 	string data_file;
 	stringstream stream;
@@ -89,17 +91,19 @@ void ADMM::train()
 	}
 	
 	if(a.isRoot)
-		printf("%3s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual");	
+		printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual","logloss");
 	while(k < maxIter){
 		if(a.isRoot)
 			printf("%3d ",k);
-		if(!x_update(train_stream))
+		if(!x_update(train_stream,&loss))
 			break;
 		z_update();
 		y_update();
 		/* Termination checks */
 		if(isStop())
 			break;
+		progressiveLoss += loss
+		printf("%10.4f\n",progressiveLoss);
 		k++;
 	}
 
@@ -139,13 +143,22 @@ bool ADMM::isStop()
 	double eps_dual = sqrt(numProcs*numData)*ABSTOL + RELTOL * nystack;
 
 	if (a.isRoot) {
-		printf("%10.4f %10.4f %10.4f %10.4f\n", prires, eps_pri, dualres, eps_dual);
+		printf("%10.4f %10.4f %10.4f %10.4f ", prires, eps_pri, dualres, eps_dual);
 	}
 
 //	if (prires <= eps_pri && dualres <= eps_dual) {
 //		return true;
 //	}
 	return false;
+}
+
+double ADMM::logloss(double p,double y){
+	p = max(min(p, 1. - 1e-15), 1e-15);
+	if(y-1 < EPSILON && y-1>EPSILON*(-1)){
+		return (-1)*log(p);    
+	}else{
+		return (-1)*log(1.-p);
+	}
 }
 
 double ADMM::innerProduct(vector<uint32_t> train_ins)
@@ -171,7 +184,7 @@ void ADMM::get_Grad(vector<uint32_t> train_ins,int label)
 	double grad = predict - label;
 	
 	for(uint32_t index = 0;index < numIns;index++){
-		g[index] += grad;
+		g[train_ins[index]] += grad;
 	}
 	
 	//the reduial grad
@@ -180,7 +193,13 @@ void ADMM::get_Grad(vector<uint32_t> train_ins,int label)
 	}
 }
 
-bool ADMM::x_update(ifstream &train_stream){
+double ADMM::predict(vector<uint32_t> train_ins)
+{
+	double inner = innerProduct(train_ins);
+	return sigmoid(inner);
+}
+
+bool ADMM::x_update(ifstream &train_stream,double *loss){
 	//sgd train
 	double beta = 0.01;
 	string line;
@@ -204,6 +223,9 @@ bool ADMM::x_update(ifstream &train_stream){
 	{
 		x[i] = x[i] - beta * g[i];
 	}
+	
+	*loss = logloss(predict(train_ins),label);
+	
 	return true;
 }
 
