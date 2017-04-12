@@ -93,8 +93,8 @@ void ADMM::train()
 	if(a.isRoot)
 		printf("%3s %10s %10s %10s %10s %10s\n", "#", "r norm", "eps_pri", "s norm", "eps_dual","logloss");
 	while(k < maxIter){
-		if(a.isRoot)
-			printf("%3d ",k);
+		//if(a.isRoot)
+			//printf("%3d ",k);
 		if(!x_update(train_stream,&loss))
 			break;
 		z_update();
@@ -103,11 +103,14 @@ void ADMM::train()
 		if(isStop())
 			break;
 		progressiveLoss += loss;
-		printf("%10.4f\n",progressiveLoss);
+		if(a.isRoot)
+			printf("%10.4f\n",progressiveLoss);
 		k++;
 	}
 
 	train_stream.close();
+	if(a.isRoot)
+		printf("save model!!\n");
 	saveModel();
 }
 
@@ -152,9 +155,9 @@ bool ADMM::isStop()
 	return false;
 }
 
-double ADMM::logloss(double p,double y){
+double ADMM::logloss(double p,int y){
 	p = max(min(p, 1. - 1e-15), 1e-15);
-	if(y-1 < EPSILON && y-1>EPSILON*(-1)){
+	if(y == 1){
 		return (-1)*log(p);    
 	}else{
 		return (-1)*log(1.-p);
@@ -178,6 +181,10 @@ double ADMM::sigmoid(double inx)
 
 void ADMM::get_Grad(vector<uint32_t> train_ins,int label)
 {
+	for(uint32_t i = 0;i < numFeatures;i++)
+	{
+		g[i] = 0.0;
+	}
 	double innerP = innerProduct(train_ins);
 	double predict = sigmoid(innerP);
 	

@@ -37,7 +37,7 @@ class ADMM{
 		double innerProduct(vector<uint32_t>);
 		double sigmoid(double);
 		void get_Grad(vector<uint32_t>,int);
-		double logloss(double p,double y);
+		double logloss(double p,int y);
 		double predict(vector<uint32_t> train_ins);
 		
 	private:
