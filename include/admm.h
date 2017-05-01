@@ -25,13 +25,12 @@ class ADMM{
 		ADMM(struct args_t a_);
 		~ADMM();
 		
-		bool x_update(ifstream &,double *);
-		void y_update();
-		void z_update();
+		bool x_update(vector<uint32_t>,int,double *);
+		void y_update(vector<uint32_t>);
+		void z_update(vector<uint32_t>);
 		void train();
 		void softThreshold(double ,double *);
 		void saveModel();
-		bool isStop();
 
 	public:
 		double innerProduct(vector<uint32_t>);
